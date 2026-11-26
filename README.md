@@ -33,7 +33,7 @@
 |---|---|---|
 | `DASHSCOPE_API_KEY` | 模型服务凭据（对话 + 嵌入） | 空（不设置则嵌入/对话不可用） |
 | `CHROMA_BASE_URL` | Chroma 服务基址 | `http://localhost:8765` |
-| `LLM_BASE_URL` | 模型服务 OpenAI 兼容模式基址 | `https://llm-xcr64b2x1zj64tsg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1` |
+| `LLM_BASE_URL` | 模型服务 OpenAI 兼容模式基址 | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 
 PowerShell 示例：
 
@@ -101,7 +101,7 @@ npm run dev
 - **集合命名规则**：长度 3–512，字符集 `[a-zA-Z0-9._-]`，首尾须为字母数字。
 - **默认集合**：知识库 `kb_main`，长期记忆 `mem_longterm`。
 - **嵌入模型**：`qwen3.7-text-embedding`，维度 `1024`，批量大小 `32`。
-- **对话模型**：`deepseek-v4.1-flash-1017`（不带 `vanchin/` 前缀，带前缀网关返回"产品未激活"）。
+- **对话模型**：`deepseek-v4.1-flash-1017`（使用裸模型名，不带厂商私有前缀，带前缀的专有网关会返回"产品未激活"）。
 - **切片默认参数**：单片上限 `600` 字符，重叠 `90` 字符，分隔符优先级 段落 → 句子 → 字符。
 - **查询向量缓存 TTL**：`60` 秒。
 

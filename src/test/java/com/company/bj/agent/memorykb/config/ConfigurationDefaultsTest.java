@@ -39,8 +39,8 @@ class ConfigurationDefaultsTest {
         assertThat(agent.getModel()).isEqualTo("deepseek-v4.1-flash-1017");
         assertThat(agent.getName()).isEqualTo("knowledge-agent");
         assertThat(agent.getMaxIters()).isEqualTo(8);
-        // 模型名不得带 vanchin/ 前缀：带前缀访问百炼网关会返回「产品未激活」。
-        assertThat(agent.getModel()).doesNotStartWith("vanchin/");
+        // 模型名不得带厂商私有前缀：带前缀访问某些专有网关会返回「产品未激活」。
+        assertThat(agent.getModel()).doesNotContain("/");
         // 凭据默认留空，只能由环境变量注入。
         assertThat(agent.getApiKey()).isEmpty();
     }

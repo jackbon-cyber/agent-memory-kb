@@ -7,8 +7,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>凭据只从环境变量注入，源码与配置文件中不得出现真实 api key。
  *
- * <p><b>模型名不带 {@code vanchin/} 前缀</b>：带前缀访问百炼网关会返回
- * "产品未激活"，因此默认值固定为 {@value #DEFAULT_MODEL}。
+ * <p><b>模型名不带厂商私有前缀</b>：部分专有网关要求模型名带租户前缀，
+ * 而通用的 OpenAI 兼容端点要求裸模型名（带前缀会返回"产品未激活"），
+ * 因此默认值固定为 {@value #DEFAULT_MODEL}。
  */
 @ConfigurationProperties(prefix = "memorykb.agent")
 public class AgentProperties {
@@ -23,7 +24,7 @@ public class AgentProperties {
     public static final int DEFAULT_MAX_ITERS = 8;
 
     /** OpenAI 兼容模式的模型服务基址。 */
-    private String baseUrl = "https://llm-xcr64b2x1zj64tsg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1";
+    private String baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 
     /** 模型服务凭据，默认留空并由环境变量 DASHSCOPE_API_KEY 注入。 */
     private String apiKey = "";

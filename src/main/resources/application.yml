@@ -10,13 +10,15 @@ memorykb:
     knowledge-collection: kb_main
     memory-collection: mem_longterm
   embedding:
-    base-url: ${LLM_BASE_URL:https://llm-xcr64b2x1zj64tsg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+    # 模型服务基址默认指向 DashScope 官方公网 OpenAI 兼容模式端点。
+    # 若使用私有部署或专有网关，通过 LLM_BASE_URL 环境变量覆盖即可。
+    base-url: ${LLM_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
     api-key: ${DASHSCOPE_API_KEY:}
     model: qwen3.7-text-embedding
     dimensions: 1024
     batch-size: 32
   agent:
-    base-url: ${LLM_BASE_URL:https://llm-xcr64b2x1zj64tsg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+    base-url: ${LLM_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
     api-key: ${DASHSCOPE_API_KEY:}
     model: deepseek-v4.1-flash-1017
     name: knowledge-agent

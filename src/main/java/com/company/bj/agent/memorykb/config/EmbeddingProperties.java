@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class EmbeddingProperties {
 
     /** OpenAI 兼容模式的模型服务基址。 */
-    private String baseUrl = "https://llm-xcr64b2x1zj64tsg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1";
+    private String baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 
     /** 模型服务凭据，默认留空并由环境变量 DASHSCOPE_API_KEY 注入。 */
     private String apiKey = "";

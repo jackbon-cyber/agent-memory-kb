@@ -24,7 +24,7 @@ public class AgentConfiguration {
      * <p>基址使用 OpenAI 兼容模式的完整路径（含 {@code /v1}）：
      * AgentScope 的 {@code OpenAIClient} 在基址路径以 {@code /v\d+} 结尾时，
      * 会把默认的 {@code /v1/chat/completions} 端点中的 {@code /v1} 前缀去掉，
-     * 最终请求的正是 {@code <baseUrl>/chat/completions} —— 与百炼网关一致。
+     * 最终请求的正是 {@code <baseUrl>/chat/completions} —— 与 OpenAI 兼容网关一致。
      *
      * @param props 智能体配置
      * @return 对话模型

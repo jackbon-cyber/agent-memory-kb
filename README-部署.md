@@ -104,7 +104,7 @@ PID 被系统回收复用时会拒绝误杀。ChromaDB 的停止复用了
 |---|---|---|
 | `DASHSCOPE_API_KEY` | 空 | 模型服务凭据（对话 + 嵌入） |
 | `CHROMA_BASE_URL` | `http://localhost:8765` | ChromaDB 基址 |
-| `LLM_BASE_URL` | 百炼兼容模式网关 | 模型服务基址 |
+| `LLM_BASE_URL` | `https://dashscope.aliyuncs.com/compatible-mode/v1` | 模型服务基址（OpenAI 兼容模式） |
 
 `start.ps1` 已按 `-Port` / `-ChromaPort` 同步改写后端启动参数，
 一般不需要手工设置环境变量。
