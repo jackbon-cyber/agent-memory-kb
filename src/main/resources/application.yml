@@ -1,0 +1,29 @@
+server:
+  port: 8088
+
+memorykb:
+  chroma:
+    base-url: ${CHROMA_BASE_URL:http://localhost:8765}
+    tenant: default_tenant
+    database: default_database
+    data-path: data/chroma
+    knowledge-collection: kb_main
+    memory-collection: mem_longterm
+  embedding:
+    base-url: ${LLM_BASE_URL:https://llm-xcr64b2x1zj64tsg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+    api-key: ${DASHSCOPE_API_KEY:}
+    model: qwen3.7-text-embedding
+    dimensions: 1024
+    batch-size: 32
+  agent:
+    base-url: ${LLM_BASE_URL:https://llm-xcr64b2x1zj64tsg.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+    api-key: ${DASHSCOPE_API_KEY:}
+    model: deepseek-v4.1-flash-1017
+    name: knowledge-agent
+    max-iters: 8
+  memory:
+    query-cache-ttl-seconds: 60
+    # 工作记忆与情景记忆的持久化路径：JSON 文件落在 data-path 之下，按作用域分文件存放。
+    data-path: data/memory
+    working-memory-file: working-memory.json
+    episodic-memory-file: episodic-memory.json

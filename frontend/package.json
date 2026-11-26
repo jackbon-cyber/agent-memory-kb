@@ -1,0 +1,27 @@
+{
+  "name": "agent-memory-kb-console",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "AgentScope 四层记忆 + ChromaDB 知识库控制台",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.7",
+    "vitest": "^2.1.8",
+    "vue-tsc": "^3.1.1"
+  }
+}

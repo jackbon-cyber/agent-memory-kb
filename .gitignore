@@ -1,0 +1,38 @@
+# ---- 构建产物 ----
+target/
+*.jar
+*.war
+*.class
+
+# ---- 前端依赖与产物 ----
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# ---- 运行时数据（Chroma 持久化目录 + 记忆 JSON + pid 文件）----
+data/
+*.log
+
+# ---- 发布打包目录（与根目录 start.ps1/stop.ps1/README-部署.md 完全重复）----
+scripts/release/
+
+# ---- 本地凭据（绝不入库）----
+scripts/.local-credentials.ps1
+.env
+.env.*
+!.env.example
+
+# ---- IDE / 系统 ----
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ---- Python 缓存 ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/

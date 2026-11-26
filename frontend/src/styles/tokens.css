@@ -1,0 +1,432 @@
+/*
+ * 设计 token —— 知识库控制台。
+ *
+ * 主题：港口夜间的值班室。深海的夜蓝底、舱壁灰的面板、
+ * 信号灯的琥珀（待处理）与航标青（正常）两色承担状态语义。
+ *
+ * 刻意避开的几种通用套路：纯黑底 + 单一荧光绿、暖奶油底 + 陶土色、
+ * 圆角卡片网格 —— 那些不来自这个场景。
+ */
+
+/* ---- 色彩 ---- */
+:root {
+  /* 底色：港口夜空，不是纯黑 —— 纯黑会让界面显得与场景无关。 */
+  --night: #0d1b26;
+  /* 面板：舱壁灰，比底色略亮，用于承载内容。 */
+  --panel: #14232f;
+  --panel-raised: #1a2d3b;
+  /* 描边：舱室内的金属边缘，低对比，不抢视线。 */
+  --edge: #24404f;
+  --edge-soft: #1c3341;
+
+  /* 信号琥珀 —— 待处理、检索命中前的提示。港口信号灯的暖黄。 */
+  --signal: #f0a83c;
+  --signal-dim: #7a5620;
+  /* 航标青 —— 已完成、正常。海图上的青色标。 */
+  --beacon: #4fd1c5;
+  --beacon-dim: #1f5b57;
+  /* 警示朱 —— 拦截、拒绝。 */
+  --alert: #e0564a;
+  --alert-dim: #6d2a24;
+
+  /* 文字：雾白，港口的雾。 */
+  --ink: #e8eef2;
+  --ink-muted: #93a7b4;
+  --ink-faint: #5f7381;
+
+  /* ---- 字体 ---- */
+  /* 正文与界面文字用无衬线；编号、状态码用等宽 —— 运维串需要对齐。 */
+  --font-sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* ---- 尺度 ---- */
+  --gap: 16px;
+  --radius: 3px; /* 近乎直角 —— 舱室里的金属件不圆润。 */
+}
+
+/* ---- 基础 ---- */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--night);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 等宽用于所有编号与状态码 —— 让一列数字视觉对齐。 */
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+
+/* 键盘可达性：焦点环必须看得见。 */
+:focus-visible {
+  outline: 2px solid var(--beacon);
+  outline-offset: 2px;
+}
+
+/* 尊重系统的减弱动效偏好。 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---- 布局骨架 ---- */
+.shell {
+  display: grid;
+  grid-template-columns: 216px 1fr;
+  min-height: 100vh;
+}
+
+/* 侧栏：视图导航。窄，只放导航。 */
+.sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--edge-soft);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brand {
+  padding: 0 20px 18px;
+  border-bottom: 1px solid var(--edge-soft);
+  margin-bottom: 12px;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.brand-sub {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 2px 0 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 20px;
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.nav-item:hover {
+  background: var(--panel-raised);
+  color: var(--ink);
+}
+
+.nav-item.is-active {
+  background: var(--panel-raised);
+  color: var(--ink);
+  border-left-color: var(--signal);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---- 状态条 ---- */
+/* 页面顶部一条细横条，实时反映「服务还活着吗」。 */
+.duty-strip {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--edge-soft);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+
+.duty-cell {
+  padding: 12px 22px;
+  border-right: 1px solid var(--edge-soft);
+  min-width: 128px;
+}
+
+.duty-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.duty-label {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 2px 0 0;
+}
+
+.duty-value.is-signal {
+  color: var(--signal);
+}
+.duty-value.is-beacon {
+  color: var(--beacon);
+}
+
+.duty-role {
+  margin-left: auto;
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.duty-role label {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* ---- 内容区 ---- */
+.content {
+  padding: 22px;
+  flex: 1;
+  min-width: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap);
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-note {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+/* ---- 表格 ---- */
+.table-wrap {
+  background: var(--panel);
+  border: 1px solid var(--edge-soft);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--edge);
+  white-space: nowrap;
+}
+
+td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--edge-soft);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: var(--panel-raised);
+}
+
+/* ---- 状态徽标 ---- */
+/* 状态用「左侧竖条 + 文字」，不用圆角药丸 —— 药丸是通用 SaaS 套路。 */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.status::before {
+  content: '';
+  width: 3px;
+  height: 13px;
+  background: var(--ink-faint);
+  flex: none;
+}
+
+.status.is-signal::before {
+  background: var(--signal);
+}
+.status.is-beacon::before {
+  background: var(--beacon);
+}
+.status.is-alert::before {
+  background: var(--alert);
+}
+.status.is-signal {
+  color: var(--signal);
+}
+.status.is-beacon {
+  color: var(--beacon);
+}
+.status.is-alert {
+  color: var(--alert);
+}
+.status.is-muted {
+  color: var(--ink-muted);
+}
+
+/* ---- 按钮 ---- */
+.btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--edge);
+  background: var(--panel-raised);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--beacon-dim);
+  background: var(--edge-soft);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--beacon-dim);
+  border-color: var(--beacon);
+  color: var(--ink);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #26716c;
+  border-color: var(--beacon);
+}
+
+.btn-sm {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* ---- 三态：加载 / 空 / 错 ---- */
+.state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+
+.state-title {
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.state.is-error .state-title {
+  color: var(--alert);
+}
+
+/* 加载态：一条静默的扫描线 —— 不用转圈图标。 */
+.scan {
+  height: 2px;
+  background: var(--edge-soft);
+  overflow: hidden;
+  position: relative;
+  margin-top: 12px;
+}
+
+.scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--beacon), transparent);
+  animation: sweep 1.15s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ---- 移动端 ---- */
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px;
+    gap: 2px;
+    border-right: none;
+    border-bottom: 1px solid var(--edge-soft);
+  }
+  .brand {
+    display: none;
+  }
+  .nav-item {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .nav-item.is-active {
+    border-left-color: transparent;
+    border-bottom-color: var(--signal);
+  }
+  .duty-strip {
+    flex-wrap: wrap;
+  }
+  .duty-role {
+    margin-left: 0;
+  }
+}

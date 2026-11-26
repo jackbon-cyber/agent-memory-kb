@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.company.bj.agent</groupId>
+    <artifactId>agent-memory-kb</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>agent-memory-kb</name>
+    <description>AgentScope 2.0 four-tier memory + ChromaDB knowledge base</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Spring Boot 版本，供 dependencyManagement 导入 BOM 时引用 -->
+        <spring-boot.version>3.3.5</spring-boot.version>
+        <!-- AgentScope 版本全局锁定为 2.0.4，禁止使用 2.1.0-BETA1 -->
+        <agentscope.version>2.0.4</agentscope.version>
+        <poi.version>5.4.1</poi.version>
+        <mockwebserver.version>4.12.0</mockwebserver.version>
+        <okhttp.version>4.12.0</okhttp.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot BOM 必须先导入，保证 Spring Boot 管理的 Jackson/JUnit 版本生效 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- AgentScope BOM 必须后导入，避免其 jackson-bom/junit-bom 覆盖 Spring Boot 的版本 -->
+            <dependency>
+                <groupId>io.agentscope</groupId>
+                <artifactId>agentscope-dependencies-bom</artifactId>
+                <version>${agentscope.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!--
+              POI 版本统一锁定为 5.4.1：AgentScope BOM 把 poi-ooxml 托管到 5.5.1，
+              若只在直接依赖上声明版本，poi-scratchpad 等仍会停留在 5.5.1，
+              造成 POI 家族版本错配，故在此统一托管整个 POI 家族。
+              注意：poi-ooxml-full 不在此托管，因为它与 poi-ooxml-lite 互斥，
+              已在下方 agentscope-extensions-rag-simple 的 exclusions 中排除。
+            -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml-lite</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-scratchpad</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <!--
+              okhttp 版本统一锁定为 4.12.0：AgentScope BOM 把 okhttp 托管到 5.3.2（多平台拆分出 okhttp-jvm），
+              而 mockwebserver 4.12.0 与 openai-java-client-okhttp 均依赖 okhttp 4.x。
+              okhttp 4.12.0 与 okhttp-jvm 5.3.2 存在 253 个同名类，若同时在运行时 classpath 上会相互遮蔽，
+              导致 NoSuchMethodError / NoClassDefFoundError，故此处统一到 4.12.0 并排除 5.x 的 okhttp-jvm。
+            -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-bom</artifactId>
+                <version>${okhttp.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- AgentScope 2.0（BOM 不管理 io.agentscope 自身制品版本，此处显式锁定 2.0.4） -->
+        <dependency>
+            <groupId>io.agentscope</groupId>
+            <artifactId>agentscope-core</artifactId>
+            <version>${agentscope.version}</version>
+            <exclusions>
+                <!--
+                  okhttp-jvm 5.3.2 与本工程统一锁定的 okhttp 4.12.0 存在 253 个同名类，
+                  同处运行时 classpath 会相互遮蔽，必须排除。
+                -->
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp-jvm</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.agentscope</groupId>
+            <artifactId>agentscope-extensions-rag-simple</artifactId>
+            <version>${agentscope.version}</version>
+            <exclusions>
+                <!--
+                  该制品传递引入 tika-parsers-standard-package → tika-parser-microsoft-module → poi-ooxml-full。
+                  poi-ooxml-full 与 poi-ooxml-lite 是互斥的 schema 集合（2569 个同名类），
+                  POI 官方明确二者不可同时出现在 classpath 上，本工程保留体积更小的 lite。
+                -->
+                <exclusion>
+                    <groupId>org.apache.poi</groupId>
+                    <artifactId>poi-ooxml-full</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.agentscope</groupId>
+            <artifactId>agentscope-extensions-model-openai</artifactId>
+            <version>${agentscope.version}</version>
+        </dependency>
+
+        <!-- Spring Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- JSON 序列化 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Excel 解析（POI 版本在 dependencyManagement 中统一锁定为 5.4.1） -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
+
+        <!-- 测试 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>${mockwebserver.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!--
+              固定 surefire 的 fork 行为：本机 Windows 上默认的 forkCount 偶发出现
+              "The forked VM terminated without properly saying goodbye"，
+              原因是 boot manifest-jar 里的 classpath 含绝对路径且跨盘符根目录，
+              fork 出来的 JVM 启动即失败。关掉 fork 复用与设置单一 fork 即可稳定复现测试。
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
